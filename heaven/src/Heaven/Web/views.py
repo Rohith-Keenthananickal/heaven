@@ -36,7 +36,7 @@ def login(request):
     
 
 def home(request):
-    your_view_function(request)
+    # your_view_function(request)
     videos= Video.objects.all()
     context={
         "videos": videos
@@ -93,13 +93,13 @@ def upload_all_videos_from_directory(directory_path):
             upload_video_function(title, file_path)
 
 
-def your_view_function(request):
-    # Your logic to get the directory path
-    video_directory = 'C:\\Users\\LENOVO\\Desktop\\heaven\\src\Heaven\\media\\all_videos'
+# def your_view_function(request):
+#     # Your logic to get the directory path
+#     video_directory = 'C:\\Users\\LENOVO\\Desktop\\heaven\\src\Heaven\\media\\all_videos'
     
 
 
-    # Call the upload function
-    upload_all_videos_from_directory(video_directory)
+#     # Call the upload function
+#     upload_all_videos_from_directory(video_directory)
 
-    # Continue with the rest of your view logic
+#     # Continue with the rest of your view logic

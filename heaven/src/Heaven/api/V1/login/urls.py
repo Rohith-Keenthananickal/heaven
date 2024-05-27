@@ -21,7 +21,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
-    path('videos/', VideoListCreateView.as_view(), name='video-list'),
+    path('videos/list/', VideoListCreateView.as_view(), name='video-list'),
     path('videos/<int:pk>/', VideoDetailView.as_view(), name='video-detail'),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
