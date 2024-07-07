@@ -1,12 +1,25 @@
 from django.shortcuts import render,redirect, get_object_or_404
 
 from django.http import HttpResponse
+
+from api.V1.login.serialyzers import VideoSerializer
+from .serializers import PaginatedVideoSerializer
 from .models import UserDetails
 from .models import Video
 from .forms import VideoUploadForm
 # import cv2
 import cv2
 import os
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+from django.views.decorators.csrf import csrf_exempt
+from .pagination import VideoPagination
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import permissions, viewsets
+from rest_framework.views import APIView
 
 def index(request):
     return render(request, 'login/login.html')
@@ -103,3 +116,74 @@ def upload_all_videos_from_directory(directory_path):
 #     upload_all_videos_from_directory(video_directory)
 
 #     # Continue with the rest of your view logic
+
+
+# @api_view(['POST'])
+# def listVideos(request):
+#     if request.method == 'POST':
+#         q = request.data.get('q')
+#         page_number = request.data.get('page', 1)  # Default to page 1 if not provided
+
+#         if q:
+#             videos = Video.objects.filter(title__icontains=q).order_by('id')
+#         else:
+#             videos = Video.objects.all().order_by('id')
+
+#         paginator = PageNumberPagination()
+#         paginator.page_size = 10  # Adjust page size as needed
+#         paginated_videos = paginator.paginate_queryset(videos, request)
+
+#         serializer = VideoSerializer(paginated_videos, many=True)
+#         custom_data = {
+#             'totalRecords': paginator.page.paginator.count,
+#             'totalPages': paginator.page.paginator.num_pages,
+#             'currentPage': page_number,  # Use the provided page_number
+#             'next': paginator.get_next_link(),
+#             'previous': paginator.get_previous_link(),
+#             'results': serializer.data , # Serialize the paginated data
+#             'recordsPerPage': len(serializer.data),  # Number of records in the current page
+#         }
+
+#         return Response(custom_data)
+
+
+class VideoListView(APIView):
+    pagination_class = PageNumberPagination
+
+    def get(self, request, *args, **kwargs):
+        videos = Video.objects.all()
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(videos, request)
+        if page is not None:
+            serializer = VideoSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        serializer = VideoSerializer(videos, many=True)
+        return Response(serializer.data)
+
+# @api_view(['POST'])
+# def listVideos(request):
+#     q = request.query_params.get('q')
+#     if q:
+#         videos = Video.objects.filter(title__icontains=q).order_by('id')
+#     else:
+#         videos = Video.objects.all().order_by('id')
+        
+#     serializer = VideoSerializer(videos, many=True)
+#     return Response(serializer.data)  # Use serializer.data, not just serializer
+
+
+@api_view(['GET'])
+def getParticularVideo(request, pk):
+    video = get_object_or_404(Video, pk=pk)
+    serializer = VideoSerializer(video)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def uploadVideo(request):
+    if request.method == 'POST':
+        serializer = VideoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

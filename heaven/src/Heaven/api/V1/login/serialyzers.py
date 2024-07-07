@@ -13,3 +13,5 @@ class CustomUserSerializer(ModelSerializer):
     class Meta:
         model = UserDetails
         fields = ('id', 'username', 'password')
+
+

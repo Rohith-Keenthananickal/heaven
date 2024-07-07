@@ -40,26 +40,33 @@ INSTALLED_APPS = [
     'Web',
     'rest_framework',
     'rest_framework.authtoken',
-    'corsheaders',
     'rest_framework_swagger',
-    'drf_yasg'
+    'drf_yasg',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'Web.middleware.range_request_middleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-     'corsheaders.middleware.CorsMiddleware',
 
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",  # Add your Angular app's domain
+    "http://localhost:4200",  # Adjust based on your Angular application's URL
+    # Add other trusted origins as needed
 ]
 
 ROOT_URLCONF = 'Heaven.urls'
@@ -134,3 +141,7 @@ MEDIA_URL ="/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+CORS_ALLOW_ALL_ORIGINS = True 
