@@ -1,9 +1,7 @@
 from django.shortcuts import render,redirect, get_object_or_404
-
 from django.http import HttpResponse
 
 from api.V1.login.serialyzers import VideoSerializer
-from .serializers import PaginatedVideoSerializer
 from .models import UserDetails
 from .models import Video
 from .forms import VideoUploadForm
@@ -14,12 +12,7 @@ import os
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from django.views.decorators.csrf import csrf_exempt
-from .pagination import VideoPagination
-from rest_framework.pagination import PageNumberPagination
-from rest_framework import permissions, viewsets
-from rest_framework.views import APIView
+
 
 def index(request):
     return render(request, 'login/login.html')
@@ -118,58 +111,44 @@ def upload_all_videos_from_directory(directory_path):
 #     # Continue with the rest of your view logic
 
 
-# @api_view(['POST'])
-# def listVideos(request):
-#     if request.method == 'POST':
-#         q = request.data.get('q')
-#         page_number = request.data.get('page', 1)  # Default to page 1 if not provided
 
-#         if q:
-#             videos = Video.objects.filter(title__icontains=q).order_by('id')
-#         else:
-#             videos = Video.objects.all().order_by('id')
+@api_view(['POST'])
+def listVideos(request):
+    # Extract search query, page, and number_of_requests from the request body
+    q = request.data.get('q')
+    page = int(request.data.get('page', 1))  # Default to page 1 if not provided
+    number_of_requests = int(request.data.get('pageSize', 10))  # Default to 5 items per page
 
-#         paginator = PageNumberPagination()
-#         paginator.page_size = 10  # Adjust page size as needed
-#         paginated_videos = paginator.paginate_queryset(videos, request)
+    # Filter videos based on the search query
+    if q:
+        videos = Video.objects.filter(title__icontains=q).order_by('id')
+    else:
+        videos = Video.objects.all().order_by('id')
 
-#         serializer = VideoSerializer(paginated_videos, many=True)
-#         custom_data = {
-#             'totalRecords': paginator.page.paginator.count,
-#             'totalPages': paginator.page.paginator.num_pages,
-#             'currentPage': page_number,  # Use the provided page_number
-#             'next': paginator.get_next_link(),
-#             'previous': paginator.get_previous_link(),
-#             'results': serializer.data , # Serialize the paginated data
-#             'recordsPerPage': len(serializer.data),  # Number of records in the current page
-#         }
+    # Calculate pagination
+    start = (page - 1) * number_of_requests
+    end = start + number_of_requests
+    paginated_videos = videos[start:end]
 
-#         return Response(custom_data)
+    # Check if the page is out of range
+    if start >= len(videos):
+        return Response({
+            'total_results': len(videos),
+            'page_size': number_of_requests,
+            'current_page': page,
+            'results': []
+        })
 
-
-class VideoListView(APIView):
-    pagination_class = PageNumberPagination
-
-    def get(self, request, *args, **kwargs):
-        videos = Video.objects.all()
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(videos, request)
-        if page is not None:
-            serializer = VideoSerializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
-        serializer = VideoSerializer(videos, many=True)
-        return Response(serializer.data)
-
-# @api_view(['POST'])
-# def listVideos(request):
-#     q = request.query_params.get('q')
-#     if q:
-#         videos = Video.objects.filter(title__icontains=q).order_by('id')
-#     else:
-#         videos = Video.objects.all().order_by('id')
-        
-#     serializer = VideoSerializer(videos, many=True)
-#     return Response(serializer.data)  # Use serializer.data, not just serializer
+    # Serialize the paginated data
+    serializer = VideoSerializer(paginated_videos, many=True)
+    
+    # Return the manually paginated response
+    return Response({
+        'total_results': len(videos),
+        'page_size': number_of_requests,
+        'current_page': page,
+        'results': serializer.data
+    })
 
 
 @api_view(['GET'])
